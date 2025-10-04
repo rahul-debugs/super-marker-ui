@@ -85,7 +85,7 @@
 
 <!-- updated code for the add and delete -->
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -128,7 +128,7 @@
 
         <h2 style="margin-top: 2rem;">Existing Products</h2>
         <div id="adminProductList" class="product-grid">
-            <!-- Admin product list with delete buttons -->
+            Admin product list with delete buttons
         </div>
     </section>
 </div>
@@ -194,6 +194,229 @@ function attachDeleteEvents() {
 
 // Initial load
 loadAdminProducts();
+</script>
+
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Manage Products & Dashboard</title>
+  <link rel="stylesheet" href="adminstyle.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    /* --- Basic Styling --- */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f6fa;
+      margin: 0;
+      padding: 0;
+    }
+    .navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      background-color: #2d3436; padding: 1rem 2rem; color: #fff;
+    }
+    .navbar a { color: #dfe6e9; text-decoration: none; margin-left: 1rem; }
+    .navbar a.active, .navbar a:hover { color: #00b894; }
+    .main-content { max-width: 900px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.1);}
+    .admin-section h2, .dashboard-section h2, .orders-section h2 { text-align: center; margin-bottom: 1.5rem; color: #2d3436; }
+    #productForm { display: flex; flex-direction: column; gap: 0.8rem; }
+    #productForm input { padding: 0.7rem; border-radius: 8px; border: 1px solid #dfe6e9; }
+    #productForm button { padding: 0.8rem; background: #00b894; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    .product-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .product-card { border: 1px solid #dfe6e9; border-radius: 12px; padding: 1rem; width: 200px; text-align: center; background: #f9f9f9; }
+    .delete-btn { margin-top: 0.5rem; padding: 0.3rem 0.5rem; background: #e17055; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .stats-grid { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+    .stat-card { background: #00b894; color: #fff; padding: 1rem 1.5rem; border-radius: 10px; flex: 1; min-width: 150px; text-align: center; }
+    .order-card { border: 1px solid #dfe6e9; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-brand">SuperMart</div>
+    <div class="navbar-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#products">Products</a>
+        <a href="admin.html" class="active">Admin</a>
+        <a href="login.html" class="logout-btn">Logout</a>
+    </div>
+</nav>
+
+<div class="main-content">
+
+  <!-- Admin Product Management -->
+  <section class="admin-section">
+      <h2>Add New Product</h2>
+      <form id="productForm">
+          <label>Product Name</label>
+          <input type="text" id="productName" required>
+
+          <label>Product Price</label>
+          <input type="number" step="0.01" id="productPrice" required>
+
+          <label>Unit (kg, loaf, unit, etc.)</label>
+          <input type="text" id="productUnit" required>
+
+          <label>Product Emoji/Icon</label>
+          <input type="text" id="productLogo" placeholder="🍎" required>
+
+          <label>Stock Quantity</label>
+          <input type="number" id="productStock" value="15" required>
+
+          <button type="submit">Add Product</button>
+      </form>
+
+      <h2 style="margin-top: 2rem;">Existing Products</h2>
+      <div id="adminProductList" class="product-grid"></div>
+  </section>
+
+  <!-- Dashboard Stats -->
+  <section class="dashboard-section" style="margin-top: 3rem;">
+      <h2 class="section-title">Business Overview</h2>
+      <div class="stats-grid">
+          <div class="stat-card">
+              <h4>Total Sales</h4>
+              <p class="stat-value" id="stat-sales">$0.00</p>
+          </div>
+          <div class="stat-card">
+              <h4>Profit (25%)</h4>
+              <p class="stat-value" id="stat-profit">$0.00</p>
+          </div>
+          <div class="stat-card">
+              <h4>Orders Placed</h4>
+              <p class="stat-value" id="stat-orders">0</p>
+          </div>
+          <div class="stat-card">
+              <h4>Low Stock Items</h4>
+              <p class="stat-value" id="stat-low-stock">0</p>
+          </div>
+      </div>
+  </section>
+
+  <!-- Customer Orders -->
+  <section class="orders-section" style="margin-top: 2rem;">
+      <h2 class="section-title">Customer Orders</h2>
+      <div id="orders-list">
+          <p>No orders yet.</p>
+      </div>
+  </section>
+
+</div>
+
+<script>
+feather.replace();
+
+const form = document.getElementById("productForm");
+const adminProductList = document.getElementById("adminProductList");
+const statSales = document.getElementById("stat-sales");
+const statProfit = document.getElementById("stat-profit");
+const statOrders = document.getElementById("stat-orders");
+const statLowStock = document.getElementById("stat-low-stock");
+const ordersList = document.getElementById("orders-list");
+
+// ----- Load Admin Products -----
+function loadAdminProducts() {
+    const products = JSON.parse(localStorage.getItem("products")) || [];
+    adminProductList.innerHTML = "";
+
+    products.forEach((p, index) => {
+        const remainingStock = p.stock - (p.sold || 0);
+        const card = document.createElement("div");
+        card.classList.add("product-card");
+        card.innerHTML = `
+            <div class="product-logo">${p.logo}</div>
+            <div class="product-details">
+                <h3 class="product-name">${p.name}</h3>
+                <p class="product-price">$${p.price.toFixed(2)} / ${p.unit}</p>
+                <p class="product-stock">${remainingStock > 0 ? `In Stock: ${remainingStock}` : 'Out of Stock'}</p>
+                <button class="delete-btn" data-index="${index}">Delete</button>
+            </div>
+        `;
+        adminProductList.appendChild(card);
+    });
+
+    attachDeleteEvents();
+}
+
+// ----- Add Product -----
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("productName").value;
+    const price = parseFloat(document.getElementById("productPrice").value);
+    const unit = document.getElementById("productUnit").value;
+    const logo = document.getElementById("productLogo").value;
+    const stock = parseInt(document.getElementById("productStock").value);
+
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+    const id = "P" + String(products.length + 1).padStart(3, "0");
+
+    products.push({ id, name, price, unit, logo, stock, sold: 0 });
+    localStorage.setItem("products", JSON.stringify(products));
+
+    alert("✅ Product added successfully!");
+    form.reset();
+    loadAdminProducts();
+    updateDashboard();
+});
+
+// ----- Delete Product -----
+function attachDeleteEvents() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const index = btn.dataset.index;
+            let products = JSON.parse(localStorage.getItem("products")) || [];
+            products.splice(index, 1);
+            localStorage.setItem("products", JSON.stringify(products));
+            loadAdminProducts();
+            updateDashboard();
+        });
+    });
+}
+
+// ----- Dashboard Stats -----
+function updateDashboard() {
+    const products = JSON.parse(localStorage.getItem("products")) || [];
+    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+    let totalSales = orders.reduce((sum, o) => sum + o.total, 0);
+    let totalProfit = totalSales * 0.25;
+
+    statSales.textContent = `$${totalSales.toFixed(2)}`;
+    statProfit.textContent = `$${totalProfit.toFixed(2)}`;
+    statOrders.textContent = orders.length;
+    statLowStock.textContent = products.filter(p => (p.stock - (p.sold || 0)) <= 5).length;
+
+    // Customer Orders
+    if (orders.length === 0) {
+        ordersList.innerHTML = "<p>No orders yet.</p>";
+    } else {
+        ordersList.innerHTML = "";
+        orders.forEach((order, idx) => {
+            const div = document.createElement("div");
+            div.classList.add("order-card");
+            div.innerHTML = `
+                <h4>Order #${idx+1} - ${order.customer}</h4>
+                <ul>
+                    ${order.items.map(i => `<li>${i.name} x${i.quantity} - $${(i.price*i.quantity).toFixed(2)}</li>`).join('')}
+                </ul>
+                <strong>Total: $${order.total.toFixed(2)}</strong>
+            `;
+            ordersList.appendChild(div);
+        });
+    }
+}
+
+// ----- Initial Load -----
+loadAdminProducts();
+updateDashboard();
 </script>
 
 </body>
