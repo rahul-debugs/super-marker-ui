@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperMart Dashboard</title>
+  <link rel="stylesheet" href="indexstyle.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="container nav-container">
+    <div class="navbar-brand">🛒 SuperMart</div>
+    <div class="navbar-links">
+      <a href="index.html">Home</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="login.html">Admin</a>
+      <a href="login.html" class="logout-btn">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="main-content container">
+
+  <section class="dashboard-section">
+    <h2 class="section-title">Business Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>Total Sales</h4>
+        <p class="stat-value" id="stat-sales">$0.00</p>
+      </div>
+      <div class="stat-card">
+        <h4>Profit (25%)</h4>
+        <p class="stat-value" id="stat-profit">$0.00</p>
+      </div>
+      <div class="stat-card">
+        <h4>Orders Placed</h4>
+        <p class="stat-value" id="stat-orders">0</p>
+      </div>
+      <div class="stat-card">
+        <h4>Low Stock Items</h4>
+        <p class="stat-value" id="stat-low-stock">0</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="orders-section">
+    <h2 class="section-title">Customer Orders</h2>
+    <div id="orders-list">
+      <p>No orders yet.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  feather.replace();
+
+  const statSales = document.getElementById("stat-sales");
+  const statProfit = document.getElementById("stat-profit");
+  const statOrders = document.getElementById("stat-orders");
+  const statLowStock = document.getElementById("stat-low-stock");
+  const ordersList = document.getElementById("orders-list");
+
+  function loadDashboard() {
+    const products = JSON.parse(localStorage.getItem("products")) || [];
+    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+    // Stats
+    let totalSales = orders.reduce((sum, o) => sum + o.total, 0);
+    let totalProfit = totalSales * 0.25;
+
+    statSales.textContent = `$${totalSales.toFixed(2)}`;
+    statProfit.textContent = `$${totalProfit.toFixed(2)}`;
+    statOrders.textContent = orders.length;
+    statLowStock.textContent = products.filter(p => p.stock <= 5).length;
+
+    // Orders list
+    if(orders.length === 0){
+      ordersList.innerHTML = "<p>No orders yet.</p>";
+    } else {
+      ordersList.innerHTML = "";
+      orders.forEach((order, idx) => {
+        const div = document.createElement("div");
+        div.classList.add("order-card");
+        div.innerHTML = `
+          <h4>Order #${idx+1} - ${order.customer}</h4>
+          <ul>
+            ${order.items.map(i => `<li>${i.name} x${i.quantity} - $${(i.price*i.quantity).toFixed(2)}</li>`).join('')}
+          </ul>
+          <strong>Total: $${order.total.toFixed(2)}</strong>
+        `;
+        ordersList.appendChild(div);
+      });
+    }
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>
