@@ -476,6 +476,7 @@
     <div class="navbar-links">
       <a href="index.html" class="active">Home</a>
       <a href="#products">Products</a>
+      <a href="order-history.html" id="orderHistoryLink" style="display: none;">Order History</a>
       <!-- <a href="dashboard.html">Dashboard</a> -->
       <a href="login.html">Admin</a>
       <div class="cart-icon-wrapper" id="cartIcon">
@@ -738,8 +739,15 @@
     }
   });
 
+  document.addEventListener('DOMContentLoaded', async () => {
+    const response = await fetch('/check-login');
+    const data = await response.json();
+    if (data.loggedIn) {
+      document.getElementById('orderHistoryLink').style.display = 'block';
+    }
+  });
+
   loadProducts();
-  updateCartBadge();
 </script>
 
 </body>
