@@ -699,38 +699,43 @@
     }
   }
 
-  checkoutBtn.addEventListener('click', () => {
-    if(cart.length === 0){
+  checkoutBtn.addEventListener('click', async () => {
+    if (cart.length === 0) {
       alert("Your cart is empty!");
       return;
     }
 
-    const customerName = prompt("Enter customer name:");
-    if(!customerName) return;
+    const response = await fetch('/check-login');
+    const data = await response.json();
 
-    try {
-      let orders = JSON.parse(localStorage.getItem("orders")) || [];
-      orders.push({ customer: customerName, items: cart, total: cart.reduce((sum, i) => sum + i.price*i.quantity, 0) });
-      localStorage.setItem("orders", JSON.stringify(orders));
+    if (data.loggedIn) {
+      const customerName = data.user.username;
+      try {
+        let orders = JSON.parse(localStorage.getItem("orders")) || [];
+        orders.push({ customer: customerName, items: cart, total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0) });
+        localStorage.setItem("orders", JSON.stringify(orders));
 
-      // Update product stock
-      cart.forEach(cItem => {
-        const pIndex = productsData.findIndex(p => p.name === cItem.name);
-        if(pIndex >= 0) productsData[pIndex].stock -= cItem.quantity;
-      });
-      localStorage.setItem("products", JSON.stringify(productsData));
-    } catch (e) {
-      console.error("Storage error:", e);
+        // Update product stock
+        cart.forEach(cItem => {
+          const pIndex = productsData.findIndex(p => p.name === cItem.name);
+          if (pIndex >= 0) productsData[pIndex].stock -= cItem.quantity;
+        });
+        localStorage.setItem("products", JSON.stringify(productsData));
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+
+      alert("Order placed successfully!");
+      cart.length = 0;
+      renderCart();
+      updateCartBadge();
+      renderProducts(productsData);
+
+      cartModal.classList.remove('active');
+      cartOverlay.classList.remove('active');
+    } else {
+      window.location.href = 'login.html';
     }
-
-    alert("Order placed successfully!");
-    cart.length = 0;
-    renderCart();
-    updateCartBadge();
-    renderProducts(productsData);
-    
-    cartModal.classList.remove('active');
-    cartOverlay.classList.remove('active');
   });
 
   loadProducts();

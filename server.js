@@ -316,6 +316,15 @@ app.post("/add-to-cart", async (req, res) => {
   }
 });
 
+// ------------------- Check Login Status -------------------
+app.get("/check-login", (req, res) => {
+  if (req.session.user) {
+    res.json({ loggedIn: true, user: req.session.user });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
 // ------------------- START SERVER -------------------
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
