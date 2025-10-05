@@ -325,6 +325,42 @@ app.get("/check-login", (req, res) => {
   }
 });
 
+// ------------------- API for Orders -------------------
+app.get("/api/orders", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  const orders = await Cart.find().sort({ createdAt: -1 });
+  res.json(orders);
+});
+
+app.post("/api/orders/:id/complete", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  try {
+    const order = await Cart.findById(req.params.id);
+    if (order) {
+      order.status = "Completed";
+      await order.save();
+      res.json({ message: "Order marked as completed" });
+    } else {
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error completing order" });
+  }
+});
+
+app.get("/api/user/orders", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "You must be logged in" });
+  }
+  const orders = await Cart.find({ user: req.session.user.username }).sort({ createdAt: -1 });
+  res.json(orders);
+});
+
 // ------------------- START SERVER -------------------
 app.listen(PORT, () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)

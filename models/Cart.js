@@ -27,7 +27,8 @@ const CartSchema = new mongoose.Schema({
       quantity: { type: Number, default: 1 }
     }
   ],
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  status: { type: String, default: "Pending" }
 });
 
 module.exports = mongoose.model("Cart", CartSchema);

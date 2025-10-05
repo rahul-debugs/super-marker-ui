@@ -759,12 +759,9 @@ function attachDeleteEvents() {
 }
 
 // Load Orders
-function loadOrders() {
-  try {
-    ordersData = JSON.parse(localStorage.getItem('orders')) || [];
-  } catch (e) {
-    ordersData = [];
-  }
+async function loadOrders() {
+  const response = await fetch('/api/orders');
+  ordersData = await response.json();
 
   if (ordersData.length === 0) {
     ordersList.innerHTML = `
@@ -777,13 +774,14 @@ function loadOrders() {
   }
 
   ordersList.innerHTML = '';
-  ordersData.forEach((order, idx) => {
+  ordersData.forEach(order => {
     const card = document.createElement('div');
     card.classList.add('order-card');
+    const total = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     card.innerHTML = `
       <div class="order-header">
-        <div class="order-id">Order #${idx + 1} - ${order.customer}</div>
-        <div class="order-status">Pending</div>
+        <div class="order-id">Order #${order._id.slice(-6)} - ${order.user}</div>
+        <div class="order-status">${order.status}</div>
       </div>
       <ul class="order-items">
         ${order.items.map(i => `
@@ -794,8 +792,8 @@ function loadOrders() {
         `).join('')}
       </ul>
       <div class="order-footer">
-        <div class="order-total">$${order.total.toFixed(2)}</div>
-        <button class="btn-complete" data-index="${idx}">✓ Complete Delivery</button>
+        <div class="order-total">$${total.toFixed(2)}</div>
+        ${order.status === 'Pending' ? `<button class="btn-complete" data-id="${order._id}">✓ Complete Delivery</button>` : ''}
       </div>
     `;
     ordersList.appendChild(card);
@@ -807,34 +805,35 @@ function loadOrders() {
 // Complete Order
 function attachCompleteEvents() {
   document.querySelectorAll('.btn-complete').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (!confirm('Mark this order as completed?')) return;
 
-      const index = parseInt(btn.dataset.index);
-      try {
-        ordersData = JSON.parse(localStorage.getItem('orders')) || [];
-        ordersData.splice(index, 1);
-        localStorage.setItem('orders', JSON.stringify(ordersData));
-      } catch (e) {
-        console.error('Storage error:', e);
-      }
+      const orderId = btn.dataset.id;
+      const response = await fetch(`/api/orders/${orderId}/complete`, {
+        method: 'POST'
+      });
 
-      updateDashboard();
+      if (response.ok) {
+        updateDashboard();
+      } else {
+        alert('Failed to complete order.');
+      }
     });
   });
 }
 
 // Update Dashboard
-function updateDashboard() {
+async function updateDashboard() {
   try {
     productsData = JSON.parse(localStorage.getItem('products')) || [];
-    ordersData = JSON.parse(localStorage.getItem('orders')) || [];
+    const response = await fetch('/api/orders');
+    ordersData = await response.json();
   } catch (e) {
     productsData = [];
     ordersData = [];
   }
 
-  const totalSales = ordersData.reduce((sum, o) => sum + o.total, 0);
+  const totalSales = ordersData.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.price * i.quantity, 0), 0);
   const totalProfit = totalSales * 0.25;
 
   statSales.textContent = `$${totalSales.toFixed(2)}`;

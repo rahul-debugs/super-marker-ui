@@ -72,15 +72,8 @@
       return;
     }
 
-    const currentUser = data.user.username;
-    let allOrders = [];
-    try {
-      allOrders = JSON.parse(localStorage.getItem("orders")) || [];
-    } catch (e) {
-      console.error("Error parsing orders from localStorage", e);
-    }
-
-    const userOrders = allOrders.filter(order => order.customer === currentUser);
+    const ordersResponse = await fetch('/api/user/orders');
+    const userOrders = await ordersResponse.json();
 
     if (userOrders.length === 0) {
       orderGrid.innerHTML = '<p class="empty-history">You have no past orders.</p>';
@@ -90,6 +83,7 @@
     userOrders.forEach(order => {
       const orderCard = document.createElement('div');
       orderCard.classList.add('order-card');
+      const total = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       const itemsHtml = order.items.map(item => `
         <div class="order-item">
@@ -100,11 +94,14 @@
 
       orderCard.innerHTML = `
         <div class="order-card-header">
-          <span class="order-customer">Customer: ${order.customer}</span>
-          <span class="order-total">Total: $${order.total.toFixed(2)}</span>
+          <span class="order-customer">Order #${order._id.slice(-6)}</span>
+          <span class="order-total">Total: $${total.toFixed(2)}</span>
         </div>
         <div class="order-items-container">
           ${itemsHtml}
+        </div>
+        <div class="order-footer">
+          <span class="order-status">Status: ${order.status}</span>
         </div>
       `;
       orderGrid.appendChild(orderCard);
@@ -529,4 +526,5 @@
 
 
 </body>
+
 </html>

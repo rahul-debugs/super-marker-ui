@@ -710,30 +710,32 @@
     const data = await response.json();
 
     if (data.loggedIn) {
-      const customerName = data.user.username;
       try {
-        let orders = JSON.parse(localStorage.getItem("orders")) || [];
-        orders.push({ customer: customerName, items: cart, total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0) });
-        localStorage.setItem("orders", JSON.stringify(orders));
-
-        // Update product stock
-        cart.forEach(cItem => {
-          const pIndex = productsData.findIndex(p => p.name === cItem.name);
-          if (pIndex >= 0) productsData[pIndex].stock -= cItem.quantity;
+        const res = await fetch('/add-to-cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ items: cart })
         });
-        localStorage.setItem("products", JSON.stringify(productsData));
-      } catch (e) {
-        console.error("Storage error:", e);
+
+        if (res.ok) {
+          alert("Order placed successfully!");
+          cart.length = 0;
+          renderCart();
+          updateCartBadge();
+          // Optionally, you can re-fetch products to update stock display
+          // loadProducts(); 
+          
+          cartModal.classList.remove('active');
+          cartOverlay.classList.remove('active');
+        } else {
+          alert('Failed to place order.');
+        }
+      } catch (error) {
+        console.error('Error placing order:', error);
+        alert('Error placing order.');
       }
-
-      alert("Order placed successfully!");
-      cart.length = 0;
-      renderCart();
-      updateCartBadge();
-      renderProducts(productsData);
-
-      cartModal.classList.remove('active');
-      cartOverlay.classList.remove('active');
     } else {
       window.location.href = 'login.html';
     }
